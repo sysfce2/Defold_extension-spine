@@ -187,8 +187,10 @@
 
 
 (g/defnk produce-spine-scene-pb [_node-id spine-json atlas]
-  {:spine_json (resource/resource->proj-path spine-json)
-   :atlas (resource/resource->proj-path atlas)})
+  (-> (protobuf/make-map-with-defaults spine-plugin-spinescene-cls
+        :spine_json (resource/resource->proj-path spine-json)
+        :atlas (resource/resource->proj-path atlas))
+      (dissoc :sample-rate))) ; Deprecated field.
 
 ;; (defn- transform-positions [^Matrix4d transform mesh]
 ;;   (let [p (Point3d.)]
@@ -768,18 +770,15 @@
 ;;//////////////////////////////////////////////////////////////////////////////////////////////
 
 (g/defnk produce-model-pb [spine-scene-resource default-animation skin material-resource blend-mode create-go-bones playback-rate offset]
-  (cond-> {:spine-scene (resource/resource->proj-path spine-scene-resource)
-           :default-animation default-animation
-           :skin skin
-           :material (resource/resource->proj-path material-resource)
-           :blend-mode blend-mode
-           :create-go-bones create-go-bones}
-
-           (not= 1.0 playback-rate)
-           (assoc :playback-rate playback-rate)
-
-           (not= 0.0 offset)
-           (assoc :offset offset)))
+  (protobuf/make-map-with-defaults spine-plugin-spinemodel-cls
+    :spine-scene (resource/resource->proj-path spine-scene-resource)
+    :default-animation default-animation
+    :skin skin
+    :blend-mode blend-mode
+    :material (resource/resource->proj-path material-resource)
+    :create-go-bones create-go-bones
+    :playback-rate playback-rate
+    :offset offset))
 
 (defn ->skin-choicebox [spine-skins]
   (properties/->choicebox (cons "" (remove (partial = "default") spine-skins))))
